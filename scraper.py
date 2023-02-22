@@ -20,7 +20,7 @@ def scrape_job_positions(redis_key: str, job_title: str, location: str) -> List[
 
             if "Next page" in response:
                 print(f'Found next page in {redis_key} for {get_thread()}')
-                job_positions = extract_job_positions(response)
+                job_positions = extract_job_positions(response, location)
                 set_job_positions(redis_key, job_positions)
             else:
                 is_next_page = set_next_page_in_redis(redis_key)
@@ -31,7 +31,7 @@ def scrape_job_positions(redis_key: str, job_title: str, location: str) -> List[
 
     
 
-def extract_job_positions(response: str) -> List[List[str]]:
+def extract_job_positions(response: str, raw_location: str) -> List[List[str]]:
     cleaned_jobs: list[list[str]] = []
     job_ids: list[str] = []
 
@@ -94,6 +94,6 @@ def extract_job_positions(response: str) -> List[List[str]]:
 
         post_job_position_to_ez_jobs()
 
-        cleaned_jobs.append([job_title, jobkey, company_name, location, full_description, qualifications, benefits, job_type, email, phone])
+        cleaned_jobs.append([job_title, jobkey, company_name, location, full_description, qualifications, benefits, job_type, email, phone, raw_location])
 
     return cleaned_jobs

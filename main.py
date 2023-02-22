@@ -10,6 +10,7 @@ from redis_client import flush_redis_db
 JOB_TITLES = pd.read_csv("job_titles.csv")
 
 job_positions = []
+cities = []
 
 def get_job_titles() -> Dict[str, Dict[str, str]]:
     job_titles: Dict[str, Dict[str, str]] = {}
@@ -21,6 +22,7 @@ def get_job_titles() -> Dict[str, Dict[str, str]]:
             'title': title,
             'city': city
         }
+        cities.append(city)
     return job_titles
 
 class JobPositionScraper:
@@ -39,9 +41,21 @@ class JobPositionScraper:
 
     def write_data_to_xls(self) -> None:
         global job_positions
-        df = pd.DataFrame(job_positions, columns=['Title', 'Key', 'Company', 'Location', 'Description', 'Qualifications', 'Benefits', 'Job type', 'Email', 'Phone'])
-        df = df.drop_duplicates(subset=['Key'], keep='first')
-        df.to_excel(f"simply_hired-{time.strftime('%m-%d-%Y')}.xlsx", index=False)
+        df = pd.DataFrame(job_positions, columns=['Title', 'Key', 'Company', 'Location', 'Description', 'Qualifications', 'Benefits', 'Job type', 'Email', 'Phone', 'Raw location'])
+
+        # define a custom sort order for the "city" column
+        city_order = cities
+
+        df['city_order'] = df['Raw location'].apply(lambda x: city_order.index(x))
+
+        # sort the DataFrame by the "city" column
+        df_sorted = df.sort_values('city_order')
+        
+        # drop the temporary "city_order" column
+        df_sorted = df_sorted.drop(columns='city_order')
+        df_sorted = df_sorted.drop(columns='Raw location')
+        df_dropped_duplicates = df_sorted.drop_duplicates(subset=['Key'], keep='first')
+        df_dropped_duplicates.to_excel(f"simply_hired-{time.strftime('%m-%d-%Y')}.xlsx", index=False)
         flush_redis_db()   
 
 
