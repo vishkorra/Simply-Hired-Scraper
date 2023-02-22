@@ -2,7 +2,7 @@ import re
 from typing import List
 import requests
 from bs4 import BeautifulSoup
-from redis_client import get_job_positions, get_next_page_from_redis, get_page_number_from_redis, get_thread, set, set_job_positions, set_next_page_in_redis
+from redis_client import get_job_positions, get_next_page_from_redis, get_page_number_from_redis, get_thread, set_job_positions, set_next_page_in_redis
 
 def get_jobs_from_simply_hired(job_title: str, location: str, page_number: int) -> str:
     url =  f"https://www.simplyhired.co.in/search?q={job_title}&l={location}&pn={page_number}" 
@@ -12,15 +12,9 @@ def post_job_position_to_ez_jobs() -> None:
     pass
 
 def scrape_job_positions(redis_key: str, job_title: str, location: str) -> List[List[str]]:    
-    while True:
-            is_next_page = get_next_page_from_redis(redis_key)
-            print(f'Got is_next_page ({is_next_page}) - ({bool(is_next_page)}) for {redis_key}')
+    is_next_page = get_next_page_from_redis(redis_key)
 
-            if not is_next_page:
-                print(f'Exiting for {redis_key}, no more pages found.')
-                job_positions = get_job_positions(redis_key)
-                return job_positions
-
+    while is_next_page:
             page_number = get_page_number_from_redis(redis_key)
             response = get_jobs_from_simply_hired(job_title, location, page_number)
 
@@ -29,7 +23,13 @@ def scrape_job_positions(redis_key: str, job_title: str, location: str) -> List[
                 job_positions = extract_job_positions(response)
                 set_job_positions(redis_key, job_positions)
             else:
-                set_next_page_in_redis(redis_key)
+                is_next_page = set_next_page_in_redis(redis_key)
+
+    print(f'Exiting for {redis_key}, no more pages found. - {get_thread()}')
+    job_positions = get_job_positions(redis_key)
+    return job_positions
+
+    
 
 def extract_job_positions(response: str) -> List[List[str]]:
     cleaned_jobs: list[list[str]] = []

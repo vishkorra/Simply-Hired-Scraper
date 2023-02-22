@@ -46,9 +46,10 @@ def get_next_page_from_redis(redis_key: str) -> bool:
         print(f'Got the next page {next_page} - {get_thread()} exiting.')
         return next_page == 1
 
-def set_next_page_in_redis(redis_key: str) -> None:
+def set_next_page_in_redis(redis_key: str) -> bool:
     with REDIS_CLIENT.lock("next_page_lock"):
         set(f"{redis_key}-next_page", '0')
+    return False
 
 def set_job_positions(redis_key: str, value: List[List[str]]):
     with REDIS_CLIENT.lock("job_positions_lock"):
