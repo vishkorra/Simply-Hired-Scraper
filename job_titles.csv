@@ -1,0 +1,4 @@
+Job Title,City,CategoryId,Category_Name,State,Latitude,Longtitude,Zipcode
+driver,hyderabad,5d84de71e69ba158a235b8ae,Driver,Telangana,17.4267972,78.4524801,500082
+driver,mumbai,5d84de71e69ba158a235b8ae,Driver,Maharastra,18.9385352,72.836334,400001
+driver,chennai,5d84de71e69ba158a235b8ae,Driver,Tamilnadu,13.0963045,80.2865916,600001
